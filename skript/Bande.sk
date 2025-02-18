@@ -1,0 +1,707 @@
+options:
+	#Hvordan skal det stå i chatten
+	pc: &8&l[ &2&lBANDE &8&l] 
+	
+	
+	
+	#Hvordan skal det stå i en oversigt som f.x. /bande hjælp
+	po: &8&l[ &2&lBANDE &8&l] 
+	
+	#Hvodan skal det stå i bande menuen
+	pg: &8&l[ &2&lBANDE &8&l] 
+	
+	#Navne en bande ikke må hedde eller indeholde
+	Ulovlige_navne: "Fuck","Noob","Ingen","None","<none>","Staff","HeadAdmin","Nations","Prison","SUPERBONECRAFT","Mod","Moderator","Ejer","Owner","Mor","Fuc","Nigg",".",",","Paze","Lort","Server","pik","fisse","dick","dic","*","_","group","&","-","'","?","+","?","=","]","[","{","}","(",")","^",":",";","?","@","?","%%","?","/","tekniker","tek","duerdum","jeghadercrazycraft","caspererdum","faxeerdum","darkerdum" or "Admin"
+
+variables:
+	{{b.levelkrav.%{b.%player%}%}} = 
+
+
+
+command /bandemedlemmer:
+	trigger:
+		loop {b.%{_bande}%.medlemmer::*}:
+			send "%loop-value%" to player
+
+function bandemedlemmer(p: player, page: number, bande: text):
+	wait 3 ticks
+	if {b.%{_p}%} is set:
+		set {_uuid} to uuid of {_p}
+		open chest with 5 rows named "%{b.farve.%{_bande}%}%%{_bande}%&8's Medlemmer" to {_p}
+		format gui slot 0,1,2,3,4,5,6,7,8 of {_p} with green stained glass pane named "&8&l[ &2&lCash &8&l]"
+		set {_n} to 9
+		loop {b.%{_bande}%.medlemmer::*}:
+			set {_skull} to skull of loop-value
+			format slot {_n} of {_p} with {_skull} named "&2&lSpiller: &7%loop-value%" with lore "&7&lStatus: %{stats.%loop-value%}%" to close
+			add 1 to {_n}
+	else if {_bande} is {b.%{_p}%}:
+		send "{@pc} &cDu skal være med i en bande, for gøre dette" to {_p}
+	else:
+		set {_uuid} to uuid of {_p}
+		open chest with 5 rows named "%{b.farve.%{_bande}%}%%{_bande}%&8's Medlemmer" to {_p}
+		format gui slot 0,1,2,3,4,5,6,7,8 of {_p} with green stained glass pane named "&8&l[ &2&lCash &8&l]"
+		set {_n} to 9
+		loop {b.%{_bande}%.medlemmer::*}:
+			format slot {_n} of {_p} with skull of loop-value named "&2&lSpiller: &7%loop-value%" with lore "&7&lStatus: %{stats.%loop-value%}%" to close
+			add 1 to {_n}
+				
+				
+function bander(p: player, page: number):
+	wait 3 ticks
+	set {_uuid} to uuid of {_p}
+	
+	set {_next.page} to "%{_page}+1%" parsed as an integer
+	set {_prev.page} to "%{_page}-1%" parsed as an integer
+	open chest with 5 rows named "&b&lBander på serveren" to {_p}
+	format slot 4 of {_p} with gray stained glass pane named " " to close
+	format slot 5 of {_p} with light green wool named "&eNæste Side" with lore "&f||&5[ &eSide %{_page} + 1% &5]" to close then run [bander({_p}, {_next.page})]
+	if {_page} is 1:
+		format slot 3 of {_p} with red wool named "&eForrige Side" with lore "&f||&5[ &cDu er på første side &5]" to close
+	else:
+		format slot 3 of {_p} with light green wool named "&eForrige Side" with lore "&f||&5[ &eSide %{_page} - 1% &5]" to close then run [bander({_p}, {_prev.page})]
+	format gui slot 0,1,2,6,7,8 of {_p} with green stained glass pane named "&8&l[ &2&lCash &8&l]"
+	
+	set {_n} to 9
+	set {_l} to 48 * ({_page} - 1)
+	loop {b.liste::*}:
+		add 1 to {_sto}
+		if {_sto} is greater than or equal to 48 * ({_page} - 1):
+			format slot {_n} of {_p} with Orange Hardened Clay named "&6&lBande: %{b.farve.%loop-value%}%%loop-value%" with lore "&6&lEjer: &a%{b.ejer.%loop-value%}%||&6&lVagt drab: &a%{b.l.s.vagtdrab.%loop-value%}%||&6&lFange drab: &a%{b.l.s.fangedrab.%loop-value%}%||&6&lKonto: &a%{b.bal.%loop-value%}%$||&6&lAntal medlemmer: &a%size of {b.%loop-value%.medlemmer::*}%" to close then run [bandemedlemmer({_p}, 1, loop-value)]
+			add 1 to {_n}
+on join:
+	set {stats.%player%} to "&aOnline"
+on quit:
+	set {stats.%player%} to "&cOffline"
+
+
+on chat:
+	if {mute.%player%} is not set:
+		if {b.%player%} is not set:
+			cancel event
+			broadcast "%colored player's prefix% &8| &7%player% &8» &f%message%"
+		else:
+			cancel event
+			broadcast "&8[&7%{b.level.%{b.%player%}%}%&8] &7%{b.farve.%{b.%player%}%}%%{b.%player%}% &8| %colored player's prefix% &8| &7%player% &8» &f%message%"
+	else:
+		cancel event
+		send "&cDu er muted og kan derfor ikke skrive du skal vente %{mute.%player%}% minutter"
+
+command /badmin:
+	permission: rank.Admin
+	trigger:
+		open chest with 3 rows named "&8&l[ &2Bande Admin Panel &8&l]" to player
+		format slot 10 of player with barrier named "&8&lBander" with lore "&7Klik for at se en liste over||&7alle bander i fængslet." to close then run [execute player command "/bande liste"]
+		format slot 12 of player with book named "&8&lKommandoer" with lore "&7Kommando 1||&7Kommando 2||&7Kommando 3" to close
+
+command /bande [<text>] [<text>] [<text>]:
+	aliases: /b
+	permission: Fange
+	permission message: &cDu kan ikke lave en bande som vagt
+	trigger:
+		if arg-1 is not set:
+			if {b.%player%} is not set:
+				open chest with 5 rows named "{@pg}" to player
+				format gui slot 0,1,2,3,4,5,6,7,8,36,37,38,39,40,41,42,43,44 of player with green stained glass pane named "&8&l[ &2&lCash &8&l]"
+				format slot 4 of player with anvil named "&8&lBANDE INFO" with lore "&7Du er ikke en del af en bande!" to be unstealable
+				format slot 19 of player with paper named "&8&lBande?" with lore "&7I en Bande har du mulighed ||&7for at invitere dine venner ||&7samt kæmpe om at blive ||&7den bedste bande på serveren!" to be unstealable
+				format slot 21 of player with book named "&8&lKommandoer" with lore "&7/Bande forlad &fFor at forlade din bande||&7/Bande slet &fFor at slette din bande||&7/Bande konto &fFor at se din bandes konto||&7/Bande indsæt &fFor at indsætte penge på bandens konto||&7/Bande opret &fFor at oprette en bande||&7/Bande hjælp &fFor at se denne besked||&7/Bande &fFor at åbne bande menuen" to be unstealable
+				format slot 23 of player with barrier named "&8&lBander" with lore "&7Klik for at se en liste over||&7alle bander i fængslet." to close then run [execute player command "/bande liste"]
+				format slot 25 of player with book and quill named "&8&lOpret en bande" with lore "&7For at oprette en bande brug||&7kommandoen: /bande opret 'navn'.||&7Det koster: &e10.000&6$ &7at oprette en bande." to be unstealable
+			else:
+				open chest with 5 rows named "{@pg}" to player
+				format gui slot 0,1,2,3,4,5,6,7,8,36,37,38,39,40,41,42,43,44 of player with green stained glass pane named "&8&l[ &2&lCash &8&l]"
+				format slot 21 of player with book named "&8&lKommandoer" with lore "&7/Bande forlad &fFor at forlade din bande||&7/Bande slet &fFor at slette din bande||&7/Bande konto &fFor at se din bandes konto||&7/Bande indsæt &fFor at indsætte penge på bandens konto||&7/Bande opret &fFor at oprette en bande||&7/Bande hjælp &fFor at se denne besked||&7/Bande &fFor at åbne bande menuen" to be unstealable
+				format slot 4 of player with anvil named "&8&lBande&7: %{b.farve.%{b.%player%}%}%%{b.%player%}%" with lore "&8Antal medlemmer&7: %size of {b.%{b.%player%}%.medlemmer::*}%||&8Bande leder&7: %{b.ejer.%{b.%player%}%}%||&8Fanger dræbt&7: %{b.l.s.fangedrab.%{b.%player%}%}%||&8Vagter dræbt&7: %{b.l.s.vagtdrab.%{b.%player%}%}%||&8Bande konto&7: %{b.bal.%{b.%player%}%}%$" to be unstealable
+				format slot 19 of player with barrier named "&8&lBander" with lore "&7Klik for at se en liste over||&7alle bander i fængslet." to close then run [execute player command "/bande liste"]
+				format slot 23 of player with book and quill named "&8&lMedlemmer" with lore "&7Klik for at se banden's medlemmer" to close then run [execute player command "/bande medlemmer"]
+				format slot 25 of player with nether star named "&8&lLevel up" with lore "&7&lKrav:||%{{b.levelkrav.%{b.%player%}%}}%" to close then run [execute player command "/bande levelup"]
+		if arg-1 is "opret":
+			if {b.%player%} is not set:
+				if arg-2 is set:
+					if {b.ib.%arg-2%} is set:
+						send "{@pc} Der er allerade en bande der hedder: %arg-2%"
+					else:
+						if player's balance is greater than 9999:
+							if arg-2 contains {@Ulovlige_navne}:
+								send "{@pc} Det er ikke tilladt at kalde sin bande: %arg-2%"
+							else:
+								remove 10000 from player's balance
+								send "{@pc} &2&lOpretter banden %arg-2%"
+								set {b.ib.%arg-2%} to true
+								set {b.%player%} to arg-2
+								wait 2 seconds
+								set {b.ejer.%arg-2%} to "%player%"
+								set {b.level.%arg-2%} to 1
+								set {b.skade.%arg-2%} to 0
+								set {b.bal.%arg-2%} to 0
+								set {b.l.s.vagtdrab.%arg-2%} to 0
+								set {b.l.s.fangedrab.%arg-2%} to 0
+								set {b.farve.%arg-2%} to "&7"
+								add player to {b.%arg-2%.medlemmer::*}
+								add arg-2 to {b.liste::*}
+								send "{@pc} &aBanden %arg-2% er nu oprettet"
+								set {bandevagtkills::%arg-2%} to 0
+								set {bandefangekills::%arg-2%} to 0
+						else:
+							send "{@pc} Du har ikke penge nok til at oprette en bande det koster &e10.000&6$"
+				else:
+					send "{@pc} Du skal give din bande et navn"
+			else:
+				send "{@pc} Du er allerade med i banden %{b.%player%}%, brug /bande forlad for at forlade banden %{b.%player%}%"
+				
+				
+
+		if arg-1 is "forlad":
+			if {b.%player%} is set:
+				if {b.ejer.%{b.%player%}%} is not "%player%":
+					delete {b.member.%player%}
+					remove "%player%" from {b.%{b.%player%}%.medlemmer::*}
+					send "{@pc} &4&lForlader banden %{b.%player%}%"
+					delete {b.%player%}
+					wait 2 seconds
+					send "{@pc} &cDu har nu forladt banden"
+				else:
+					send "{@pc} &cHvis du ejer en bande skal du bruge: /bande slet"
+			else:
+				send "{@pc} &cDu er ikke med i en bande!"
+
+				
+
+		if arg-1 is "slet":
+			if {b.%player%} is set:
+				if {b.ejer.%{b.%player%}%} is "%player%":
+					send "{@pc} &4&lSletter din bande"
+					wait 2 seconds
+					delete {bandevagtkills::%{b.%player%}%}
+					delete {bandefangekills::%{b.%player%}%}
+					delete {b.ib.%{b.%player%}%}
+					delete {b.ejer.%{b.%player%}%}
+					delete {b.bal.%{b.%player%}%}
+					remove {b.%player%} from {b.liste::*}
+					remove "%player%" from {b.%{b.%player%}%.medlemmer::*}
+					loop {b.%{b.%player%}%.medlemmer::*}:
+						delete {b.%loop-value%}
+					delete {b.%{b.%player%}%.medlemmer::*}
+					delete {b.%player%}
+					delete {b.member.%player%}
+					send "{@pc} &cDin bande er nu slettet"
+				else:
+					send "{@pc} &cDet er kun ejeren af banden der har adgang til dette!"
+			else:
+				send "{@pc} &cDu er ikke en del af en bande"
+				
+				
+				
+		if arg-1 is "top":
+			loop {bandevagtkills::*}:
+				add 1 to {_size1}
+				if {_low1.to.high.list::%loop-value%} is not set:
+					set {_low1.to.high.list::%loop-value%} to loop-index
+				else:
+					set {_n1} to 0
+					loop {_size1} times:
+						set {_n1} to {_n1}+1
+						{_low1.to.high.list::%loop-value-1%.%{_n1}%} is not set
+						set {_low1.to.high.list::%loop-value-1%.%{_n1}%} to loop-index
+						stop loop
+			wait 2 tick
+			set {_n1} to size of {_low1.to.high.list::*}
+			loop {_low1.to.high.list::*}:
+				set {_high1.to.low.list::%{_n1}%} to loop-value
+				set {_n1} to {_n1}-1
+			set {top11} to "&8&l[ &a&l1 &8&l] &aIngen... &8[&a0&8]"
+			set {top21} to "&8&l[ &e&l2 &8&l] &eIngen... &8[&e0&8]"
+			set {top31} to "&8&l[ &c&l3 &8&l] &cIngen... &8[&c0&8]"
+			set {top41} to "&8&l[ &7&l4 &8&l] &fIngen... &8[&70&8]"
+			set {top51} to "&8&l[ &7&l5 &8&l] &fIngen... &8[&70&8]"
+			set {top61} to "&8&l[ &7&l6 &8&l] &fIngen... &8[&70&8]"
+			set {top71} to "&8&l[ &7&l7 &8&l] &fIngen... &8[&70&8]"
+			set {top81} to "&8&l[ &7&l8 &8&l] &fIngen... &8[&70&8]"
+			set {top91} to "&8&l[ &7&l9 &8&l] &fIngen... &8[&70&8]"
+			set {top101} to "&8&l[ &7&l10 &8&l] &fIngen... &8[&70&8]"
+			loop {_high1.to.low.list::*}:
+				add 1 to {_result1}
+				if {_result1} is 1:
+					set {top11} to "&8&l[ &a&l%{_result1}% &8&l] &a%loop-value% &8[&a%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 2:
+					set {top21} to "&8&l[ &e&l%{_result1}% &8&l] &e%loop-value% &8[&e%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 3:
+					set {top31} to "&8&l[ &c&l%{_result1}% &8&l] &c%loop-value% &8[&c%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 4:
+					set {top41} to "&8&l[ &7&l%{_result1}% &8&l] &f%loop-value% &8[&7%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 5:
+					set {top51} to "&8&l[ &7&l%{_result1}% &8&l] &f%loop-value% &8[&7%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 6:
+					set {top61} to "&8&l[ &7&l%{_result1}% &8&l] &f%loop-value% &8[&7%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 7:
+					set {top71} to "&8&l[ &7&l%{_result1}% &8&l] &f%loop-value% &8[&7%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 8:
+					set {top81} to "&8&l[ &7&l%{_result1}% &8&l] &f%loop-value% &8[&7%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 9:
+					set {top91} to "&8&l[ &7&l%{_result1}% &8&l] &f%loop-value% &8[&7%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 10:
+					set {top101} to "&8&l[ &7&l%{_result1}% &8&l] &f%loop-value% &8[&7%{bandevagtkills::%loop-value%}%&8]"
+				if {_result1} is 11:
+					stop
+			wait 3 ticks
+			open chest with 3 rows named "&aTop bandekills" to player
+			wait 3 ticks
+			set {_slot} to 0
+			loop 27 times:
+				format slot {_slot} of player with green stained glass pane named "&8&l[ &2Cash &8&l]" to be unstealable
+				add 1 to {_slot}
+			format slot 11 of player with paper named "&a&lTop bande vagtdrab" with lore "%{top11}%||%{top21}%||%{top31}%||%{top41}%||%{top51}%||%{top61}%||%{top71}%||%{top81}%||%{top91}%||%{top101}%||" to be unstealable
+			loop {bandefangekills::*}:
+				add 1 to {_size2}
+				if {_low2.to.high.list::%loop-value%} is not set:
+					set {_low2.to.high.list::%loop-value%} to loop-index
+				else:
+					set {_n2} to 0
+					loop {_size2} times:
+						set {_n2} to {_n2}+1
+						{_low2.to.high.list::%loop-value-1%.%{_n2}%} is not set
+						set {_low2.to.high.list::%loop-value-1%.%{_n2}%} to loop-index
+						stop loop
+			wait 2 tick
+			set {_n2} to size of {_low2.to.high.list::*}
+			loop {_low2.to.high.list::*}:
+				set {_high2.to.low.list::%{_n2}%} to loop-value
+				set {_n2} to {_n2}-1
+			set {top12} to "&8&l[ &a&l1 &8&l] &aIngen... &8[&a0&8]"
+			set {top22} to "&8&l[ &e&l2 &8&l] &eIngen... &8[&e0&8]"
+			set {top32} to "&8&l[ &c&l3 &8&l] &cIngen... &8[&c0&8]"
+			set {top42} to "&8&l[ &7&l4 &8&l] &fIngen... &8[&70&8]"
+			set {top52} to "&8&l[ &7&l5 &8&l] &fIngen... &8[&70&8]"
+			set {top62} to "&8&l[ &7&l6 &8&l] &fIngen... &8[&70&8]"
+			set {top72} to "&8&l[ &7&l7 &8&l] &fIngen... &8[&70&8]"
+			set {top82} to "&8&l[ &7&l8 &8&l] &fIngen... &8[&70&8]"
+			set {top92} to "&8&l[ &7&l9 &8&l] &fIngen... &8[&70&8]"
+			set {top102} to "&8&l[ &7&l10 &8&l] &fIngen... &8[&70&8]"
+			loop {_high2.to.low.list::*}:
+				add 1 to {_result2}
+				if {_result2} is 1:
+					set {top12} to "&8&l[ &a&l%{_result2}% &8&l] &a%loop-value% &8[&a%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 2:
+					set {top22} to "&8&l[ &e&l%{_result2}% &8&l] &e%loop-value% &8[&e%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 3:
+					set {top32} to "&8&l[ &c&l%{_result2}% &8&l] &c%loop-value% &8[&c%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 4:
+					set {top42} to "&8&l[ &7&l%{_result2}% &8&l] &f%loop-value% &8[&7%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 5:
+					set {top52} to "&8&l[ &7&l%{_result2}% &8&l] &f%loop-value% &8[&7%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 6:
+					set {top62} to "&8&l[ &7&l%{_result2}% &8&l] &f%loop-value% &8[&7%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 7:
+					set {top72} to "&8&l[ &7&l%{_result2}% &8&l] &f%loop-value% &8[&7%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 8:
+					set {top82} to "&8&l[ &7&l%{_result2}% &8&l] &f%loop-value% &8[&7%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 9:
+					set {top92} to "&8&l[ &7&l%{_result2}% &8&l] &f%loop-value% &8[&7%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 10:
+					set {top102} to "&8&l[ &7&l%{_result2}% &8&l] &f%loop-value% &8[&7%{bandefangekills::%loop-value%}%&8]"
+				if {_result2} is 11:
+					stop
+			format slot 15 of player with paper named "&a&lTop bande fangedrab" with lore "%{top12}%||%{top22}%||%{top32}%||%{top42}%||%{top52}%||%{top62}%||%{top72}%||%{top82}%||%{top92}%||%{top102}%" to be unstealable
+
+				
+				
+		if arg-1 is "shop":
+			if {b.%player%} is set:
+				wait 3 ticks
+				open chest with 3 rows named "&aBande shop" to player
+				wait 3 ticks
+				set {_n} to 0
+				loop 27 times:
+					format slot {_n} of player with green stained glass pane named "&8&l[ &2Cash &8&l]" to close
+					add 1 to {_n}
+				format slot 10 of player with iron sword named "&cBande skade:" with lore "%{b.skade.%{b.%player%}%}% %%" to close
+				if {b.cafaterie.%{b.%player%}%} is not set:
+					format slot 12 of player with apple named "&2Adgang til cafeterie" with lore "&4Ikke købt" to close
+				else:
+					format slot 12 of player with apple named "&2Adgang til cafaterie" with lore "&aKøbt" to close
+				format slot 14 of player with barrier named "&4Kommer snart" to close
+				format slot 16 of player with barrier named "&4Kommer snart" to close
+					
+					
+					
+		if arg-1 is "konto":
+			if {b.%player%} is set:
+				send "{@pc} Din bande har %{b.farve.%{b.%player%}%}%%{b.bal.%{b.%player%}%}%$, på dens konto"
+			else:
+				send "{@pc} &cDu er ikke med i en bande"
+				
+				
+
+		if arg-1 is "indsæt":
+			if {b.%player%} is set:
+				if arg-2 is set:
+					set {_penge.%player%} to arg-2 parsed as number
+					if {_penge.%player%} is a number:
+						if player's balance is greater than arg-2 parsed as a number - 1:
+							send "{@pc} &aoverføre %{b.farve.%{b.%player%}%}%%{_penge.%player%}%&a til din bande's konto"
+							wait 2 seconds
+							send "{@pc} &aoverførte %{b.farve.%{b.%player%}%}%%{_penge.%player%}%&a til din bande's konto"
+							send ""
+							add arg-2 parsed as a number to {b.bal.%{b.%player%}%}
+							subtract arg-2 parsed as a number from player's balance
+							send "{@pc} &aDin bande har nu %{b.farve.%{b.%player%}%}%%{b.bal.%{b.%player%}%}%$&a, på dens konto"
+							send "{@pc} %{b.farve.%{b.%player%}%}%%player% &aHar overført %{b.farve.%{b.%player%}%}%%{_penge.%player%}%$&a til %{b.%player%}%'s konto" to {b.ejer.%{b.%player%}%}
+						else:
+							send "{@pc} &cDette har du ikke nok penge til!"
+					else:
+						send "{@pc} &cDu skal indtaste et tal"
+				else:
+					send "{@pc} &cDu skal skrive et beløb"
+			else:
+				send "{@pc} &cDu er ikke med i en bande"
+				
+				
+				
+		if arg-1 is "inviter":
+			if {b.%player%} is set:
+				if {b.ejer.%{b.%player%}%} is "%player%":
+					if {b.iv.%{b.%player%}%.%arg-2%} is not set:
+						if {pending.inv.%{b.%player%}%} is not set:
+							if {b.%arg-2%} is not set:
+								if arg-2 is set:
+									set {b.iv.%{b.%player%}%.%arg-2%} to true
+									set {pending.inv.%{b.%player%}%} to true
+									set {inv.b.%arg-2%} to {b.%player%}
+									send "{@pc} Du har inviteret &8%arg-2% &7til din bande %{b.%player%}%"
+									send "{@pc} Banden &8%{b.%player%}% &7har inviteret dig, brug '&8/bande accepter&7' for at tillslutte banden." to arg-2 parsed as a player
+									wait 30 seconds
+									delete {b.iv.%{b.%player%}%.%arg-2%}
+									delete {pending.inv.%{b.%player%}%}
+								else:
+									send "{@pc} &8Du skal skrive hvem du vil invitere!"
+							else:
+								send "{@pc} &8%arg-2% &cer allerade med i en bande"
+						else:
+							send "{@pc} &cDu er allerade ved at invitere en anden person"
+					else:
+						send "{@pc} &cVent lidt før du bruger denne kommando igen!"
+				else:
+					send "{@pc} &cDet er kun ejeren af banden der har adgang til dette!"
+			else:
+				send "{@pc} &cDu er ikke med i en bande"
+
+		if arg-1 is "kick":
+			if {b.%player%} is set:
+				if {b.ejer.%{b.%player%}%} is "%player%":
+					if arg-2 is set:
+						if {b.%arg-2%} is {b.%player%}:
+							remove arg-2 from {b.%{b.%player%}%.medlemmer::*}
+							delete {b.%arg-2%}
+							send "{@pc} Du har kicked &8%arg-2% &7fra din bande %{b.%player%}%"
+							send "{@pc} Du er blevet kicked fra banden &8%{b.%player%}%" to arg-2 parsed as a player
+						else:
+							send "{@pc} &8%arg-2% &cer ikke med i din bande"
+					else:
+						send "{@pc} &8Du skal skrive hvem du vil kicke!"
+				else:
+					send "{@pc} &cDet er kun ejeren af banden der har adgang til dette!"
+			else:
+				send "{@pc} &cDu er ikke med i en bande"
+		
+		
+
+		if arg-1 is "accepter":
+			if {b.%player%} is not set:
+				if {inv.b.%player%} is set:
+					send "{@pc} Du er nu med i banden &8%{inv.b.%player%}%"
+					send "{@pc} %player% har nu tilsluttet sig banden %{inv.b.%player%}%" to {b.%{inv.b.%player%}%.medlemmer::*}
+					set {b.%player%} to {inv.b.%player%}
+					add player to {b.%{inv.b.%player%}%.medlemmer::*}
+					add player to {b.%{_bande}%.medlemmer::*}
+					delete {b.iv.%{b.%player%}%.%arg-2%}
+					delete {pending.inv.%{b.%player%}%}
+				else:
+					send "{@pc} &cDu er ikke blevet inviteret til nogen bande"
+			else:
+				send "{@pc} Du er allerade med i banden &8%{b.%player%}%&7, brug '&8/bande forlad&7' for at forlade din nuværende bande"
+			
+
+			
+		if arg-1 is "liste":
+			bander(player, 1)	
+				
+				
+								
+		if arg-1 is "levelup":
+			if {b.%player%} is set:
+				if {b.ejer.%{b.%player%}%} is "%player%":
+					if {b.level.%{b.%player%}%} is 1:
+						if number of blaze rod in player's inventory is greater or equal to 1:
+							if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
+								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
+									set {b.level.%{b.%player%}%} to 2
+								else:
+									send "{@pc} &cDin bande opfylder ikke alle kravene"
+									send "{@pc} &a&lKrav:"
+									if number of blaze rod in player's inventory is greater or equal to 1:
+										send "{@pc} &aFå 1 Cigaret"
+									else:
+										send "{@pc} &cFå 1 Cigaret"
+									if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
+										send "{@pc} &aFå 5.000$ på bandens konto"
+									else:
+										send "{@pc} &cFå 5.000$ på bandens konto"
+									if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
+										send "{@pc} &aDræb 10 spillere"
+									else:
+										send "{@pc} &cDræb 10 spillere"
+							else:
+								send "{@pc} &cDin bande opfylder ikke alle kravene"
+								send "{@pc} &a&lKrav:"
+								if number of blaze rod in player's inventory is greater or equal to 1:
+									send "{@pc} &aFå 1 Cigaret"
+								else:
+									send "{@pc} &cFå 1 Cigaret"
+								if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
+									send "{@pc} &aFå 7.500$ på bandens konto"
+								else:
+									send "{@pc} &cFå 5.000$ på bandens konto"
+								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
+									send "{@pc} &aDræb 10 spillere"
+								else:
+									send "{@pc} &cDræb 10 spillere"
+						else:
+							send "{@pc} &cDin bande opfylder ikke alle kravene"
+							send "{@pc} &a&lKrav:"
+							if number of blaze rod in player's inventory is greater or equal to 1:
+								send "{@pc} &aFå 1 Cigaret"
+							else:
+								send "{@pc} &cFå 1 Cigaret"
+							if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
+								send "{@pc} &aFå 5.000$ på bandens konto"
+							else:
+								send "{@pc} &cFå 5.000$ på bandens konto"
+							if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
+								send "{@pc} &aDræb 10 spillere"
+							else:
+								send "{@pc} &cDræb 10 spillere"
+					else if {b.level.%{b.%player%}%} is 2:
+						if number of blaze rod in player's inventory is greater or equal to 3:
+							if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
+								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
+									set {b.level.%{b.%player%}%} to 3
+								else:
+									send "{@pc} &cDin bande opfylder ikke alle kravene"
+									send "{@pc} &a&lKrav:"
+									if number of blaze rod in player's inventory is greater or equal to 3:
+										send "{@pc} &aFå 3 Cigaretter"
+									else:
+										send "{@pc} &6Få 3 Cigaretter"
+									if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
+										send "{@pc} &aFå 25.000$ på bandens konto"
+									else:
+										send "{@pc} &6Få 25.000$ på bandens konto"
+									if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
+										send "{@pc} &aDræb 25 spillere"
+									else:
+										send "{@pc} &6Dræb 25 spillere"
+							else:
+								send "{@pc} &cDin bande opfylder ikke alle kravene"
+								send "{@pc} &a&lKrav:"
+								if number of blaze rod in player's inventory is greater or equal to 3:
+									send "{@pc} &aFå 3 Cigaretter"
+								else:
+									send "{@pc} &6Få 3 Cigaretter"
+								if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
+									send "{@pc} &aFå 25.000$ på bandens konto"
+								else:
+									send "{@pc} &6Få 25.000$ på bandens konto"
+								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
+									send "{@pc} &aDræb 25 spillere"
+								else:
+									send "{@pc} &6Dræb 25 spillere"
+						else:
+							send "{@pc} &cDin bande opfylder ikke alle kravene"
+							send "{@pc} &a&lKrav:"
+							if number of blaze rod in player's inventory is greater or equal to 3:
+								send "{@pc} &aFå 3 Cigaretter"
+							else:
+								send "{@pc} &6Få 3 Cigaretter"
+							if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
+								send "{@pc} &aFå 25.000$ på bandens konto"
+							else:
+								send "{@pc} &6Få 25.000$ på bandens konto"
+							if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
+								send "{@pc} &aDræb 25 spillere"
+							else:
+								send "{@pc} &6Dræb 25 spillere"
+					else if {b.level.%{b.%player%}%} is 3:
+						if number of blaze rod in player's inventory is greater or equal to 7:
+							if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
+								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
+									set {b.level.%{b.%player%}%} to 3
+								else:
+									send "{@pc} &cDin bande opfylder ikke alle kravene"
+									send "{@pc} &a&lKrav:"
+									if number of blaze rod in player's inventory is greater or equal to 7:
+										send "{@pc} &aFå 7 Cigaretter"
+									else:
+										send "{@pc} &6Få 7 Cigaretter"
+									if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
+										send "{@pc} &aFå 50.000$ på bandens konto"
+									else:
+										send "{@pc} &6Få 50.000$ på bandens konto"
+									if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
+										send "{@pc} &aDræb 50 spillere"
+									else:
+										send "{@pc} &6Dræb 50 spillere"
+							else:
+								send "{@pc} &cDin bande opfylder ikke alle kravene"
+								send "{@pc} &a&lKrav:"
+								if number of blaze rod in player's inventory is greater or equal to 7:
+									send "{@pc} &aFå 7 Cigaretter"
+								else:
+									send "{@pc} &6Få 7 Cigaretter"
+								if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
+									send "{@pc} &aFå 50.000$ på bandens konto"
+								else:
+									send "{@pc} &6Få 50.000$ på bandens konto"
+								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
+									send "{@pc} &aDræb 50 spillere"
+								else:
+									send "{@pc} &6Dræb 50 spillere"
+						else:
+							send "{@pc} &cDin bande opfylder ikke alle kravene"
+							send "{@pc} &a&lKrav:"
+							if number of blaze rod in player's inventory is greater or equal to 7:
+								send "{@pc} &aFå 7 Cigaretter"
+							else:
+								send "{@pc} &6Få 7 Cigaretter"
+							if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
+								send "{@pc} &aFå 50.000$ på bandens konto"
+							else:
+								send "{@pc} &6Få 50.000$ på bandens konto"
+							if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
+								send "{@pc} &aDræb 50 spillere"
+							else:
+								send "{@pc} &6Dræb 50 spillere"
+					else if {b.level.%{b.%player%}%} is 4:
+						if number of blaze rod in player's inventory is greater or equal to 10:
+							if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
+								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
+									set {b.level.%{b.%player%}%} to 5
+								else:
+									send "{@pc} &cDin bande opfylder ikke alle kravene"
+									send "{@pc} &a&lKrav:"
+									if number of blaze rod in player's inventory is greater or equal to 10:
+										send "{@pc} &aFå 10 Cigaretter"
+									else:
+										send "{@pc} &6Få 10 Cigaretter"
+									if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
+										send "{@pc} &aFå 200.000$ på bandens konto"
+									else:
+										send "{@pc} &6Få 200.000$ på bandens konto"
+									if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
+										send "{@pc} &aDræb 1 vagt"
+									else:
+										send "{@pc} &6Dræb 1 vagt"
+							else:
+								send "{@pc} &cDin bande opfylder ikke alle kravene"
+								send "{@pc} &a&lKrav:"
+								if number of blaze rod in player's inventory is greater or equal to 10:
+									send "{@pc} &aFå 10 Cigaretter"
+								else:
+									send "{@pc} &6Få 10 Cigaretter"
+								if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
+									send "{@pc} &aFå 200.000$ på bandens konto"
+								else:
+									send "{@pc} &6Få 200.000$ på bandens konto"
+								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
+									send "{@pc} &aDræb 1 vagt"
+								else:
+									send "{@pc} &6Dræb 1 vagt"
+						else:
+							send "{@pc} &cDin bande opfylder ikke alle kravene"
+							send "{@pc} &a&lKrav:"
+							if number of blaze rod in player's inventory is greater or equal to 10:
+								send "{@pc} &aFå 10 Cigaretter"
+							else:
+								send "{@pc} &6Få 10 Cigaretter"
+							if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
+								send "{@pc} &aFå 200.000$ på bandens konto"
+							else:
+								send "{@pc} &6Få 200.000$ på bandens konto"
+							if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
+								send "{@pc} &aDræb 1 vagt"
+							else:
+								send "{@pc} &6Dræb 1 vagt"
+					else if {b.level.%{b.%player%}%} is 5:
+						if number of blaze rod in player's inventory is greater or equal to 15:
+							if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
+								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
+									set {b.level.%{b.%player%}%} to 6
+								else:
+									send "{@pc} &cDin bande opfylder ikke alle kravene"
+									send "{@pc} &a&lKrav:"
+									if number of blaze rod in player's inventory is greater or equal to 15:
+										send "{@pc} &aFå 15 Cigaretter"
+									else:
+										send "{@pc} &6Få 15 Cigaretter"
+									if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
+										send "{@pc} &aFå 500.000$ på bandens konto"
+									else:
+										send "{@pc} &6Få 500.000$ på bandens konto"
+									if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
+										send "{@pc} &aDræb 2 vagter"
+									else:
+										send "{@pc} &6Dræb 2 vagter"
+							else:
+								send "{@pc} &cDin bande opfylder ikke alle kravene"
+								send "{@pc} &a&lKrav:"
+								if number of blaze rod in player's inventory is greater or equal to 15:
+									send "{@pc} &aFå 15 Cigaretter"
+								else:
+									send "{@pc} &6Få 15 Cigaretter"
+								if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
+									send "{@pc} &aFå 500.000$ på bandens konto"
+								else:
+									send "{@pc} &6Få 500.000$ på bandens konto"
+								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
+									send "{@pc} &aDræb 2 vagter"
+								else:
+									send "{@pc} &6Dræb 2 vagter"
+						else:
+							send "{@pc} &cDin bande opfylder ikke alle kravene"
+							send "{@pc} &a&lKrav:"
+							if number of blaze rod in player's inventory is greater or equal to 15:
+								send "{@pc} &aFå 15 Cigaretter"
+							else:
+								send "{@pc} &6Få 15 Cigaretter"
+							if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
+								send "{@pc} &aFå 500.000$ på bandens konto"
+							else:
+								send "{@pc} &6Få 500.000$ på bandens konto"
+							if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
+								send "{@pc} &aDræb 2 vagter"
+							else:
+								send "{@pc} &6Dræb 2 vagter"
+					else:
+						send "{@pc} &cDin bande er i det højeste level"
+				else:
+					send "{@pc} &cDet er kun ejeren af banden der har adgang til dette!"
+					
+				
+					
+		if arg-1 is "medlemmer":
+			bandemedlemmer(player, 1, {b.%player%})
+			
+			
+			
+on death:
+	if victim has permission "vagt.sk":
+		add 1 to {b.l.s.vagtdrab.%{b.%attacker%}%}
+		add 1 to {bandevagtkills::%{b.%attacker%}%}
+	else:
+		add 1 to {b.l.s.fangedrab.%{b.%attacker%}%}
+		add 1 to {bandefangekills::%{b.%attacker%}%}
+
+command /cig:
+	permission: *
+	permission message: *
+	trigger:
+		give 1 blaze rod named "&eCigaret" to player
