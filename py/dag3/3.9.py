@@ -1,7 +1,8 @@
 Alder = {"Søren": 30, "Niels": 31, "Anders": 32}
 
 for i in Alder:
-    print(f"{i}: {Alder[i]}")
+#    print(f"{i}: {Alder[i]}")
+    print(i, "er", Alder[i], "gammel")
 
 #print("Søren er "+ str(Alder["Søren"]) + " år gammel")
 #print("Niels er "+ str(Alder["Niels"]) + " år gammel")
