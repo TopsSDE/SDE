@@ -114,7 +114,7 @@ command /bande [<text>] [<text>] [<text>]:
 				format slot 4 of player with anvil named "&8&lBande&7: %{b.farve.%{b.%player%}%}%%{b.%player%}%" with lore "&8Antal medlemmer&7: %size of {b.%{b.%player%}%.medlemmer::*}%||&8Bande leder&7: %{b.ejer.%{b.%player%}%}%||&8Fanger dræbt&7: %{b.l.s.fangedrab.%{b.%player%}%}%||&8Vagter dræbt&7: %{b.l.s.vagtdrab.%{b.%player%}%}%||&8Bande konto&7: %{b.bal.%{b.%player%}%}%$" to be unstealable
 				format slot 19 of player with barrier named "&8&lBander" with lore "&7Klik for at se en liste over||&7alle bander i fængslet." to close then run [execute player command "/bande liste"]
 				format slot 23 of player with book and quill named "&8&lMedlemmer" with lore "&7Klik for at se banden's medlemmer" to close then run [execute player command "/bande medlemmer"]
-				format slot 25 of player with nether star named "&8&lLevel up" with lore "&7&lKrav:||%{{b.levelkrav.%{b.%player%}%}}%" to close then run [execute player command "/bande levelup"]
+				format slot 25 of player with nether star named "&8&lLevel up" with lore "&7&lKrav:||&f%{b.levelkrav.%{b.%player%}%} split by "||" and joined by "||&f"%" to close then run [execute player command "/bande levelup"]
 		if arg-1 is "opret":
 			if {b.%player%} is not set:
 				if arg-2 is set:
@@ -427,263 +427,103 @@ command /bande [<text>] [<text>] [<text>]:
 				
 				
 								
-		if arg-1 is "levelup":
-			if {b.%player%} is set:
-				if {b.ejer.%{b.%player%}%} is "%player%":
-					if {b.level.%{b.%player%}%} is 1:
-						if number of blaze rod in player's inventory is greater or equal to 1:
-							if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
-								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
-									set {b.level.%{b.%player%}%} to 2
-								else:
-									send "{@pc} &cDin bande opfylder ikke alle kravene"
-									send "{@pc} &a&lKrav:"
-									if number of blaze rod in player's inventory is greater or equal to 1:
-										send "{@pc} &aFå 1 Cigaret"
-									else:
-										send "{@pc} &cFå 1 Cigaret"
-									if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
-										send "{@pc} &aFå 5.000$ på bandens konto"
-									else:
-										send "{@pc} &cFå 5.000$ på bandens konto"
-									if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
-										send "{@pc} &aDræb 10 spillere"
-									else:
-										send "{@pc} &cDræb 10 spillere"
-							else:
-								send "{@pc} &cDin bande opfylder ikke alle kravene"
-								send "{@pc} &a&lKrav:"
-								if number of blaze rod in player's inventory is greater or equal to 1:
-									send "{@pc} &aFå 1 Cigaret"
-								else:
-									send "{@pc} &cFå 1 Cigaret"
-								if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
-									send "{@pc} &aFå 7.500$ på bandens konto"
-								else:
-									send "{@pc} &cFå 5.000$ på bandens konto"
-								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
-									send "{@pc} &aDræb 10 spillere"
-								else:
-									send "{@pc} &cDræb 10 spillere"
+			if arg-1 is "levelup":
+				if {b.%player%} is set:
+					if {b.ejer.%{b.%player%}%} is "%player%":
+						set {_currentLevel} to {b.level.%{b.%player%}%}
+						set {_nextLevel} to {_currentLevel} + 1
+						
+						# Check if all requirements are met
+						if checkLevelRequirements(player):
+							# Level up the gang
+							set {b.level.%{b.%player%}%} to {_nextLevel}
+							send "{@pc} &aDin bande er nu level %{_nextLevel}%!"
+							
+							# Apply the level up costs
+							applyLevelUpCosts(player)
+							
+							# Update requirements for the next level
+							updateLevelRequirements(player)
 						else:
-							send "{@pc} &cDin bande opfylder ikke alle kravene"
-							send "{@pc} &a&lKrav:"
-							if number of blaze rod in player's inventory is greater or equal to 1:
-								send "{@pc} &aFå 1 Cigaret"
-							else:
-								send "{@pc} &cFå 1 Cigaret"
-							if {b.bal.%{b.%player%}%} is greater than or equal to 5000:
-								send "{@pc} &aFå 5.000$ på bandens konto"
-							else:
-								send "{@pc} &cFå 5.000$ på bandens konto"
-							if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 10:
-								send "{@pc} &aDræb 10 spillere"
-							else:
-								send "{@pc} &cDræb 10 spillere"
-					else if {b.level.%{b.%player%}%} is 2:
-						if number of blaze rod in player's inventory is greater or equal to 3:
-							if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
-								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
-									set {b.level.%{b.%player%}%} to 3
-								else:
-									send "{@pc} &cDin bande opfylder ikke alle kravene"
-									send "{@pc} &a&lKrav:"
-									if number of blaze rod in player's inventory is greater or equal to 3:
-										send "{@pc} &aFå 3 Cigaretter"
-									else:
-										send "{@pc} &6Få 3 Cigaretter"
-									if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
-										send "{@pc} &aFå 25.000$ på bandens konto"
-									else:
-										send "{@pc} &6Få 25.000$ på bandens konto"
-									if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
-										send "{@pc} &aDræb 25 spillere"
-									else:
-										send "{@pc} &6Dræb 25 spillere"
-							else:
-								send "{@pc} &cDin bande opfylder ikke alle kravene"
-								send "{@pc} &a&lKrav:"
-								if number of blaze rod in player's inventory is greater or equal to 3:
-									send "{@pc} &aFå 3 Cigaretter"
-								else:
-									send "{@pc} &6Få 3 Cigaretter"
-								if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
-									send "{@pc} &aFå 25.000$ på bandens konto"
-								else:
-									send "{@pc} &6Få 25.000$ på bandens konto"
-								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
-									send "{@pc} &aDræb 25 spillere"
-								else:
-									send "{@pc} &6Dræb 25 spillere"
-						else:
-							send "{@pc} &cDin bande opfylder ikke alle kravene"
-							send "{@pc} &a&lKrav:"
-							if number of blaze rod in player's inventory is greater or equal to 3:
-								send "{@pc} &aFå 3 Cigaretter"
-							else:
-								send "{@pc} &6Få 3 Cigaretter"
-							if {b.bal.%{b.%player%}%} is greater than or equal to 25000:
-								send "{@pc} &aFå 25.000$ på bandens konto"
-							else:
-								send "{@pc} &6Få 25.000$ på bandens konto"
-							if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 25:
-								send "{@pc} &aDræb 25 spillere"
-							else:
-								send "{@pc} &6Dræb 25 spillere"
-					else if {b.level.%{b.%player%}%} is 3:
-						if number of blaze rod in player's inventory is greater or equal to 7:
-							if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
-								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
-									set {b.level.%{b.%player%}%} to 3
-								else:
-									send "{@pc} &cDin bande opfylder ikke alle kravene"
-									send "{@pc} &a&lKrav:"
-									if number of blaze rod in player's inventory is greater or equal to 7:
-										send "{@pc} &aFå 7 Cigaretter"
-									else:
-										send "{@pc} &6Få 7 Cigaretter"
-									if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
-										send "{@pc} &aFå 50.000$ på bandens konto"
-									else:
-										send "{@pc} &6Få 50.000$ på bandens konto"
-									if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
-										send "{@pc} &aDræb 50 spillere"
-									else:
-										send "{@pc} &6Dræb 50 spillere"
-							else:
-								send "{@pc} &cDin bande opfylder ikke alle kravene"
-								send "{@pc} &a&lKrav:"
-								if number of blaze rod in player's inventory is greater or equal to 7:
-									send "{@pc} &aFå 7 Cigaretter"
-								else:
-									send "{@pc} &6Få 7 Cigaretter"
-								if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
-									send "{@pc} &aFå 50.000$ på bandens konto"
-								else:
-									send "{@pc} &6Få 50.000$ på bandens konto"
-								if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
-									send "{@pc} &aDræb 50 spillere"
-								else:
-									send "{@pc} &6Dræb 50 spillere"
-						else:
-							send "{@pc} &cDin bande opfylder ikke alle kravene"
-							send "{@pc} &a&lKrav:"
-							if number of blaze rod in player's inventory is greater or equal to 7:
-								send "{@pc} &aFå 7 Cigaretter"
-							else:
-								send "{@pc} &6Få 7 Cigaretter"
-							if {b.bal.%{b.%player%}%} is greater than or equal to 50000:
-								send "{@pc} &aFå 50.000$ på bandens konto"
-							else:
-								send "{@pc} &6Få 50.000$ på bandens konto"
-							if {b.l.s.fangedrab.%{b.%player%}%} is greater than or equal to 50:
-								send "{@pc} &aDræb 50 spillere"
-							else:
-								send "{@pc} &6Dræb 50 spillere"
-					else if {b.level.%{b.%player%}%} is 4:
-						if number of blaze rod in player's inventory is greater or equal to 10:
-							if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
-								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
-									set {b.level.%{b.%player%}%} to 5
-								else:
-									send "{@pc} &cDin bande opfylder ikke alle kravene"
-									send "{@pc} &a&lKrav:"
-									if number of blaze rod in player's inventory is greater or equal to 10:
-										send "{@pc} &aFå 10 Cigaretter"
-									else:
-										send "{@pc} &6Få 10 Cigaretter"
-									if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
-										send "{@pc} &aFå 200.000$ på bandens konto"
-									else:
-										send "{@pc} &6Få 200.000$ på bandens konto"
-									if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
-										send "{@pc} &aDræb 1 vagt"
-									else:
-										send "{@pc} &6Dræb 1 vagt"
-							else:
-								send "{@pc} &cDin bande opfylder ikke alle kravene"
-								send "{@pc} &a&lKrav:"
-								if number of blaze rod in player's inventory is greater or equal to 10:
-									send "{@pc} &aFå 10 Cigaretter"
-								else:
-									send "{@pc} &6Få 10 Cigaretter"
-								if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
-									send "{@pc} &aFå 200.000$ på bandens konto"
-								else:
-									send "{@pc} &6Få 200.000$ på bandens konto"
-								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
-									send "{@pc} &aDræb 1 vagt"
-								else:
-									send "{@pc} &6Dræb 1 vagt"
-						else:
-							send "{@pc} &cDin bande opfylder ikke alle kravene"
-							send "{@pc} &a&lKrav:"
-							if number of blaze rod in player's inventory is greater or equal to 10:
-								send "{@pc} &aFå 10 Cigaretter"
-							else:
-								send "{@pc} &6Få 10 Cigaretter"
-							if {b.bal.%{b.%player%}%} is greater than or equal to 200000:
-								send "{@pc} &aFå 200.000$ på bandens konto"
-							else:
-								send "{@pc} &6Få 200.000$ på bandens konto"
-							if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 1:
-								send "{@pc} &aDræb 1 vagt"
-							else:
-								send "{@pc} &6Dræb 1 vagt"
-					else if {b.level.%{b.%player%}%} is 5:
-						if number of blaze rod in player's inventory is greater or equal to 15:
-							if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
-								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
-									set {b.level.%{b.%player%}%} to 6
-								else:
-									send "{@pc} &cDin bande opfylder ikke alle kravene"
-									send "{@pc} &a&lKrav:"
-									if number of blaze rod in player's inventory is greater or equal to 15:
-										send "{@pc} &aFå 15 Cigaretter"
-									else:
-										send "{@pc} &6Få 15 Cigaretter"
-									if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
-										send "{@pc} &aFå 500.000$ på bandens konto"
-									else:
-										send "{@pc} &6Få 500.000$ på bandens konto"
-									if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
-										send "{@pc} &aDræb 2 vagter"
-									else:
-										send "{@pc} &6Dræb 2 vagter"
-							else:
-								send "{@pc} &cDin bande opfylder ikke alle kravene"
-								send "{@pc} &a&lKrav:"
-								if number of blaze rod in player's inventory is greater or equal to 15:
-									send "{@pc} &aFå 15 Cigaretter"
-								else:
-									send "{@pc} &6Få 15 Cigaretter"
-								if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
-									send "{@pc} &aFå 500.000$ på bandens konto"
-								else:
-									send "{@pc} &6Få 500.000$ på bandens konto"
-								if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
-									send "{@pc} &aDræb 2 vagter"
-								else:
-									send "{@pc} &6Dræb 2 vagter"
-						else:
-							send "{@pc} &cDin bande opfylder ikke alle kravene"
-							send "{@pc} &a&lKrav:"
-							if number of blaze rod in player's inventory is greater or equal to 15:
-								send "{@pc} &aFå 15 Cigaretter"
-							else:
-								send "{@pc} &6Få 15 Cigaretter"
-							if {b.bal.%{b.%player%}%} is greater than or equal to 500000:
-								send "{@pc} &aFå 500.000$ på bandens konto"
-							else:
-								send "{@pc} &6Få 500.000$ på bandens konto"
-							if {b.l.s.vagtdrab.%{b.%player%}%} is greater than or equal to 2:
-								send "{@pc} &aDræb 2 vagter"
-							else:
-								send "{@pc} &6Dræb 2 vagter"
+							send "{@pc} &cDin bande opfylder ikke alle kravene for at nå level %{_nextLevel}%"
 					else:
-						send "{@pc} &cDin bande er i det højeste level"
+						send "{@pc} &cDet er kun ejeren af banden der har adgang til dette!"
 				else:
-					send "{@pc} &cDet er kun ejeren af banden der har adgang til dette!"
+					send "{@pc} &cDu er ikke med i en bande"
+	
+function checkLevelRequirements(p: player) :: boolean:
+	set {_bande} to {b.%{_p}%}
+	set {_requirements::*} to {b.levelkrav.%{_bande}%} split by "||"
+	loop {_requirements::*}:
+		set {_req::*} to loop-value split by ": "
+		set {_type} to {_req::1}
+		set {_amount} to {_req::2} parsed as number
+		
+		if {_type} is "Cigaretter":
+			if {b.delivered.cigar.%{_bande}%} < {_amount}:
+				return false
+		else if {_type} is "Penge":
+			if {b.bal.%{_bande}%} < {_amount}:
+				return false
+		else if {_type} is "Fangedrab":
+			if {b.l.s.fangedrab.%{_bande}%} < {_amount}:
+				return false
+		else if {_type} is "Vagtdrab":
+			if {b.l.s.vagtdrab.%{_bande}%} < {_amount}:
+				return false
+	return true
+
+function applyLevelUpCosts(p: player):
+	set {_bande} to {b.%{_p}%}
+	set {_requirements::*} to {b.levelkrav.%{_bande}%} split by "||"
+	loop {_requirements::*}:
+		set {_req::*} to loop-value split by ": "
+		set {_type} to {_req::1}
+		set {_amount} to {_req::2} parsed as number
+		
+		if {_type} is "Cigaretter":
+			subtract {_amount} from {b.delivered.cigar.%{_bande}%}
+		else if {_type} is "Penge":
+			subtract {_amount} from {b.bal.%{_bande}%}
+		else if {_type} is "Fangedrab":
+			set {b.l.s.fangedrab.%{_bande}%} to 0
+		else if {_type} is "Vagtdrab":
+			set {b.l.s.vagtdrab.%{_bande}%} to 0
+
+function updateLevelRequirements(p: player):
+	set {_bande} to {b.%{_p}%}
+	set {_nextLevel} to {b.level.%{_bande}%} + 1
+	
+	set {_cigReq} to 1 * {_nextLevel}
+	set {_moneyReq} to 5000 * {_nextLevel}
+	set {_killReq} to 10 * {_nextLevel}
+	
+	set {b.levelkrav.%{_bande}%} to "Cigaretter: %{_cigReq}%||Penge: %{_moneyReq}%||Fangedrab: %{_killReq}%"
+	
+	if {_nextLevel} is greater than 4:
+		set {_guardKillReq} to floor({_nextLevel} / 2)
+		set {b.levelkrav.%{_bande}%} to "%{b.levelkrav.%{_bande}%}%||Vagtdrab: %{_guardKillReq}%"
+
+on right click on entity:
+	if name of event-entity is "&6Bande Leveringsassistent":
+		set {_bande} to {b.%player%}
+		if {_bande} is set:
+			open chest with 3 rows named "&6Bande Levering" to player
+			set slot 13 of player's current inventory to blaze rod named "&6Lever Cigaretter" with lore "&7Klik for at levere cigaretter"
+		else:
+			send "{@pc} &cDu er ikke med i en bande"
+
+on inventory click:
+	if name of event-inventory is "&6Bande Levering":
+		cancel event
+		if index of event-slot is 13:
+			set {_cigars} to number of blaze rod in player's inventory
+			if {_cigars} > 0:
+				remove all blaze rod from player's inventory
+				add {_cigars} to {b.delivered.cigar.%{b.%player%}%}
+				send "{@pc} &aDu har leveret %{_cigars}% cigaretter til din bande!"
+			else:
+				send "{@pc} &cDu har ingen cigaretter at levere!"
 					
 				
 					
